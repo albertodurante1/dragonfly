@@ -1,0 +1,18 @@
+class Device {
+  constructor(name, data,topic) {
+    this.name = name;
+    this.data = data;  
+    this.topic = topic;
+  }
+
+  getName(){
+    return this.name;
+  }
+
+  getData(){
+    return this.data;
+  }
+  getTopic(){
+    return this.topic;
+  }
+}
