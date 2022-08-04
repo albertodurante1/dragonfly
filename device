@@ -1,18 +1,25 @@
 class Device {
-  constructor(name, data,topic) {
+  constructor(name, data) {
     this.name = name;
-    this.data = data;  
-    this.topic = topic;
+    this.dati = dati;  
+    this.topicListInput = [];
+    this.topicListOutput = [];
   }
 
   getName(){
     return this.name;
   }
 
-  getData(){
-    return this.data;
+  getDati(){
+    return this.dati;
   }
   getTopic(){
     return this.topic;
   }
+}
+
+const Topic =
+{
+  id,
+  options
 }
