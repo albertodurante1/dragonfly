@@ -14,12 +14,25 @@ class Device {
     return this.dati;
   }
   getTopic(){
-    return this.topic;
+    return this.topicListInput;
+  }
+  getTopic(){
+    return this.topicListOutput;
   }
 }
 
-const Topic =
+class Topic
 {
-  id,
-  options
+constructor(nome,options)
+
+  getId(){
+  return this.nome;
+  }
+
+  getOption(){
+    return this.options;
+  }
 }
+ 
+
+module.exports = {Device,Topic};

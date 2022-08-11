@@ -1,6 +1,9 @@
 var mqtt = require('mqtt')
 var client = mqtt.connect('mqtt://localhost:1234')
 var pass;
+const {Device,Topic} = require('device');
+const { deprecate } = require('util');
+
  master = new Boolean(false);
 var password = "mini";
 
@@ -15,7 +18,7 @@ var datiSensori = JSON.stringify(obj);
 //salvataggio su file json
 var saveDati = function(){
 const fs = require('fs');
-let sensore = new Device(id,data,topic);
+let sensore = new Device(id,dati,topic);
 let rawdata = fs.readFileSync(sensore.dati);
 datiSensori.parse(rawdata);
 
@@ -77,13 +80,30 @@ class Manager
 {
     constructor()
     {
-
+        this.listDevices=[ ]
     }
 
-    isValidMaster(){}
-    addDevice(){}
+    isValidMaster(){
+        return false;
+    }
+    addDevice(){
+        let inputTopicLed = new Topic('led1',["on", "off"])        
+        this.listDevices.push(new Device(1,"esp", [inputTopicLed],null))
+    }
     checkExistsDevice(id){} //controlla se esiste e in caso lo rimuove
-    triggerDevice(){}
-    createSubOnEventOutput(){} //se viene attivato un sensore triggera un evento
+    triggerDevice(nome, nameTopic,option)
+    {
+        for(device of listDevices)
+        {
+            if(device.name == name)
+            {
+                mqtt_pub(device.topicListInput[nameTopic, option] ) // name topic é il topic da dare e option é l'opzione da cambiare
+            
+            }
+        }
+    }
+    createSubOnEventOutput(){
+            client.subscribe(OuputTopicLed);
+        }
+    } //se viene attivato un sensore triggera un evento
 
-}
