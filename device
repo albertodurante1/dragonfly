@@ -1,7 +1,6 @@
 class Device {
   constructor(name, data) {
     this.name = name;
-    this.dati = dati;  
     this.topicListInput = [];
     this.topicListOutput = [];
   }
@@ -10,9 +9,6 @@ class Device {
     return this.name;
   }
 
-  getDati(){
-    return this.dati;
-  }
   getTopic(){
     return this.topicListInput;
   }
