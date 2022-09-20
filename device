@@ -1,8 +1,10 @@
 class Device {
-  constructor(name, data) {
+  constructor(name, topicListInput,topicListOutput) {
     this.name = name;
-    this.topicListInput = [];
-    this.topicListOutput = [];
+    this.topicListInput = [topicListInput];
+    this.topicListOutput = [topicListOutput];
+    this.smaster;
+
   }
 
   getName(){
@@ -15,11 +17,15 @@ class Device {
   getTopic(){
     return this.topicListOutput;
   }
+
+  getsmaster(){
+    return this.smaster;
+  }
 }
 
 class Topic
 {
-constructor(nome,options)
+constructor(nome,options) //option é una lista
 
   getId(){
   return this.nome;

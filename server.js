@@ -6,12 +6,17 @@ server.listen(port, function () {
     console.log(`MQTT Broker running on port: ${port}`);
 });
 
+
 // authenticate the connecting client
-aedes.authenticate = (client, username, password, callback) => {
-    password = Buffer.from(password, 'base64').toString();
-    if (username === 'admin' && password === 'mini') {
+aedes.authenticate = (statomaster, callback) => {
+    if (statomaster == true) {  //controllare se sia corretto credo bisogni fare la sub a 'statomaster'
+        console.log('accesso garantito');
         return callback(null, true);
     }
+    //password = Buffer.from(password, 'base64').toString();
+   // if (username === 'admin' && password === 'mini') {
+   //     return callback(null, true);
+   // }
     const error = new Error('Authentication Failed!! Invalid user credentials.');
     console.log('Error ! Authentication failed.')
     return callback(error, false)
