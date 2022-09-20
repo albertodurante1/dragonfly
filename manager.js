@@ -127,9 +127,9 @@ class Manager
     }
 
 
-    createSubOnEventOutput(device,nometopic,event){
+    createSubOnEventOutput(device,nometopic){
         for(device of this.listDevices){
-            if(event){
+            if(triggerDevice){
                 client.subscribe(nometopic);
             }
 
@@ -137,6 +137,6 @@ class Manager
             
             
             
-    } //se viene attivato un sensore triggera un evento
+    } //se viene attivato un sensore di output genera una sub sul sensore 
 } 
 
