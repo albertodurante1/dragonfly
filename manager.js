@@ -2,7 +2,7 @@ var mqtt = require('mqtt')
 var client = mqtt.connect('mqtt://localhost:1234')
 
 const {Device,Topic} = require('device');
-const { deprecate } = require('util');
+
 
 
  id = "admin";
@@ -127,10 +127,11 @@ class Manager
     }
 
 
-    createSubOnEventOutput(device,nometopic){
+    createSubOnEventOutput(device,nometopic,eventOutput){
         for(device of this.listDevices){
-            if(triggerDevice){
-                client.subscribe(nometopic);
+            if(eventOutput){
+                client.publish(nometopic, device.topicListOutput[nometopic,eventOutput]);
+                client.subscribe(nometopic);              
             }
 
         }
