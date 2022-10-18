@@ -115,10 +115,10 @@ class Manager
         for(device of this.listDevices){
             if(device.nome = nameTopic){ 
                 if(option == 'on'){
-                    device.option = HIGH;
+                    device.option = 1;
                     client.publish(nameTopic, device.topicListInput[nameTopic,option]);
                 }else{
-                    device.option = LOW;
+                    device.option = 0;
                  client.publish(nameTopic, device.topicListInput[nameTopic,option]);
                 }
             }
