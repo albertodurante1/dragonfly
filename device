@@ -1,8 +1,8 @@
 class Device {
   constructor(name, topicListInput,topicListOutput) {
     this.name = name;
-    this.topicListInput = [topicListInput];
-    this.topicListOutput = [topicListOutput];
+    this.topicListInput = topicListInput;
+    this.topicListOutput = topicListOutput;
     this.smaster;
 
   }

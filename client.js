@@ -1,16 +1,14 @@
 var mqtt = require('mqtt')
-var client = mqtt.connect('mqtt://localhost:1234')
-var topic = 'sensore'
-var message = 'dato'
+var client = mqtt.connect('mqtt://192.168.1.6:1883')
+var listaSensori=[];
 
 
-client.on('connect', ()=>{
-    setInterval(()=>{
-        client.publish(topic,message)
-        console.log('dati sensore:', message)
-    },2000)
+
+client.on('message', (topic,message)=>{
+    message = message.toString()
+    console.log('messaggio ricevuto', message)
 })
 
 client.on('connect', ()=>{
-    client.subscribe(topic)
+    client.subscribe("Sensore")
 })

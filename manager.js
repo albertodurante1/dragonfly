@@ -1,5 +1,5 @@
 var mqtt = require('mqtt')
-var client = mqtt.connect('mqtt://localhost:1234')
+var client = mqtt.connect('mqtt://localhost:1883')
 
 const {Device,Topic} = require('device');
 
@@ -43,9 +43,6 @@ var checkExistence = function(device){
 
 
 
-
-
-
 class Manager
 {
     constructor()
@@ -80,6 +77,8 @@ class Manager
       });
      
     }
+
+    
   
     addDevice(device,nome, option)
     {
@@ -126,6 +125,7 @@ class Manager
         }       
     }
 
+        
 
     createSubOnEventOutput(device,nometopic,eventOutput){
         for(device of this.listDevices){
@@ -140,4 +140,6 @@ class Manager
             
     } //se viene attivato un sensore di output genera una sub sul sensore 
 } 
+
+module.exports = {Manager};
 
