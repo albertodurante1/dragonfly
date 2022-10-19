@@ -1,7 +1,10 @@
 var mqtt = require('mqtt')
 var client = mqtt.connect('mqtt://localhost:1883')
 
-const {Device,Topic} = require('device');
+
+
+
+const {Device,Topic} = require('./device');
 
 
 
@@ -35,61 +38,64 @@ fs.readFile(datiSensori, (err, data) => {
 }
 
 //funziona controllo esistenza
-var checkExistence = function(device){
-    //inserire libreria github detecte device
+var checkExistence = function(){
+    if(!client){
+       return true; 
+    }
 }
-
-
+//lunghezza del json
+// var count = Object.keys(myObject).length;
+// console.log(count);
 
 
 
 class Manager
 {
+
+    static TOPICNEWDEVICE = "newdevice"
+
     constructor()
     {
+        /**
+         * @type  {Device[]}
+         */
         this.listDevices= [];
-    }
-
-    //controllo se il dispositivo é master
-
-    isValidMaster = function(id,password){  //farlo in maniera autonoma con riconoscimento di mini senza richiedere id e pass
-    const readline = require('readline').createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
+        client.subscribe(Manager.TOPICNEWDEVICE)
+        client.on('message', (topic,message)=>{
     
-      readline.question('user?', user => {    
-        readline.close();
-        if(id == user){
-            readline.question('password?', pass => {    
-                readline.close();
-                if(password == pass){
-                    return  true;
-                    
-                }else{
-                    return false;
-                }
-              });
+            objectMessage = JSON.parse(message)
+           // console.log(jsonStr['Led1'])
+            //console.log(jsonStr["Led2"])
+            //vector = jsonStr["Led1"] + " \n" + jsonStr["Led2"] 
+            //console.log(vector)
+           if(topic == Manager.TOPICNEWDEVICE){
+                this.addDevice(objectMessage)
+           }
+        })
+        
+        client.on('connect', ()=>{
             
-        }else{
-                return false;
-        }
-      });
-     
+        
+        })
     }
+ 
+   
 
-    
-  
-    addDevice(device,nome, option)
-    {
-        let inputTopic = new Topic(nome,option);     
-        if (isValidMaster){
-            this.listDevices.push(new Device(device.nome, [inputTopic],null,true));
-            client.publish(ListaDispositivi, this.listDevices);
-        }else{
-            this.listDevices.push(new Device(device.nome, [inputTopic],null,false));
-            client.publish(ListaDispositivi, this.listDevices);
-        }
+     
+  /**
+   * 
+   * @param {Device} objectMessage 
+   */
+    addDevice(objectMessage)
+    {   
+        
+        let inputTopic = new Topic(nome,options); 
+        let listInputTopic= objectMessage.topicListInput
+
+        objectMessage.topicListInput
+        let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
+        this.listDevices.push(new Device(objectMessage.nome, listInputTopic,listOutputTopic))
+
     }
 
 
@@ -102,6 +108,7 @@ class Manager
               }else{ 
                 console.log("il dispositivo non é piú connesso, procedo a rimuoverlo");
                 client.unsubscribe(device);
+                //pop o remove del device
               }
             }
             },500);
@@ -109,20 +116,65 @@ class Manager
     } //controlla la presenza del dispositivo e se esiste da le sue informazioni in caso contrario lo rimuove
 
 
-
+    
+    /**
+     * 
+     * @param {Device } device 
+     * @param {string} nameTopic 
+     * @param {string} option 
+     */
     triggerDevice(device, nameTopic,option) 
     {
-        for(device of this.listDevices){
-            if(device.nome = nameTopic){ 
-                if(option == 'on'){
-                    device.option = 1;
-                    client.publish(nameTopic, device.topicListInput[nameTopic,option]);
-                }else{
-                    device.option = 0;
-                 client.publish(nameTopic, device.topicListInput[nameTopic,option]);
-                }
+
+
+        const indexOfDeviceInsideListDevices =this.listDevices.map(device=>device.name).indexOf(device.name)
+
+        if(indexOfDeviceInsideListDevices<0){
+           console.log(' Il device non è presente nella lista!')
+           return 
+        }
+
+        // ora sono sicuro che c'è l'elemento
+
+        const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];
+
+        /**
+         * @type {Device}
+         */
+        const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
+
+        const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.topicListInput,deviceCopy.topicListOutput)
+        devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
+            if(topic.nome===nameTopic){
+                topic.options=[option]
+                return topic
+            }else{
+                return topic
             }
-        }       
+
+        })
+        
+        client.publish("MODIFICE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
+
+        return devicethatIwanttopubblish
+
+
+
+
+        // for( let deviceInList of this.listDevices){
+        //     if(deviceInList.name === nameTopic){ 
+        //         if(option === '') // controllare se l'opzione arrivata combacia con quella del topic  
+        //         {
+
+        //             const deviceNewState = new Device()
+                    
+        //             client.publish(nameTopic, device.topicListInput[nameTopic,option]);
+        //         }else{
+        //             device.option = 0;
+        //          client.publish(nameTopic, device.topicListInput[nameTopic,option]);
+        //         }
+        //     }
+        // }       
     }
 
         
@@ -140,6 +192,9 @@ class Manager
             
     } //se viene attivato un sensore di output genera una sub sul sensore 
 } 
+
+
+
 
 module.exports = {Manager};
 
