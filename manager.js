@@ -8,34 +8,40 @@ const {Device,Topic} = require('./device');
 
 
 
- id = "admin";
- password = "mini";
+const id = "admin";
+const  password = "mini";
+var objectMessage;
 
 var obj = {
     table:[]
 };
 
-var datiSensori = JSON.stringify(obj);
 
+
+//metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic
+client.on('message', (topic,message)=>{
+    objectMessage = JSON.parse(message.toString())
+})
 
 
 //salvataggio su file json
-var saveDataOnFile = function(){
+var saveDataOnFile = function(listDevices){
 const fs = require('fs');
-let rawdata = fs.readFileSync(listDevices);
-datiSensori.parse(rawdata);
+fs.writeFile('listaDispositivi.txt', listDevices, function (err) {
+    if (err) return console.log(err);
+    console.log('Hello World > helloworld.txt');
+  });
 }
 
 
 //lettura dati da file json
 var readDataFromFile = function(){
 const fs = require('fs');
-fs.readFile(datiSensori, (err, data) => {
+fs.readFile('listaDispositivi.txt', (err, data) => {
     if (err) throw err;
-    datiSensori.parse(data);
-    console.log(datiSensori)
-});
+    });
 }
+
 
 //funziona controllo esistenza
 var checkExistence = function(){
@@ -60,23 +66,10 @@ class Manager
          * @type  {Device[]}
          */
         this.listDevices= [];
-        client.subscribe(Manager.TOPICNEWDEVICE)
-        client.on('message', (topic,message)=>{
-    
-            objectMessage = JSON.parse(message)
-           // console.log(jsonStr['Led1'])
-            //console.log(jsonStr["Led2"])
-            //vector = jsonStr["Led1"] + " \n" + jsonStr["Led2"] 
-            //console.log(vector)
-           if(topic == Manager.TOPICNEWDEVICE){
-                this.addDevice(objectMessage)
-           }
-        })
+        client.subscribe(Manager.TOPICNEWDEVICE);
+        this.addDevice(objectMessage);
         
-        client.on('connect', ()=>{
-            
         
-        })
     }
  
    
@@ -89,31 +82,36 @@ class Manager
     addDevice(objectMessage)
     {   
         
-        let inputTopic = new Topic(nome,options); 
+        //let inputTopic = new Topic(nome,options); 
+        //let listInputTopic= objectMessage.topicListInput
         let listInputTopic= objectMessage.topicListInput
-
-        objectMessage.topicListInput
-        let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
-        this.listDevices.push(new Device(objectMessage.nome, listInputTopic,listOutputTopic))
+        let listOutputTopic= objectMessage.topicListInput        
+        //objectMessage.topicListInput
+        //let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
+        this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic))
 
     }
 
+/**
+   * 
+   * @param {Device} device
+   */
 
+//aggiustare qua
     checkExistsDevice(device){
-        client.on('connect', function () {
-            setInterval(function() {
+        
             for(device of this.listDevices){
-              if(checkExistence){
-                console.log("il dispostivo é presente:", client.subscribe(device));
-              }else{ 
-                console.log("il dispositivo non é piú connesso, procedo a rimuoverlo");
-                client.unsubscribe(device);
+              if(!checkExistence()){
+                let indexRemove = this.listDevices.indexOf(device);
+                this.listDevices.splice(indexRemove); //utilizzo di splice per rimuovere un determinato elemento
+              }
+                           
                 //pop o remove del device
               }
             }
-            },500);
-          });
-    } //controlla la presenza del dispositivo e se esiste da le sue informazioni in caso contrario lo rimuove
+            
+          
+     //controlla la presenza del dispositivo e se esiste da le sue informazioni in caso contrario lo rimuove
 
 
     
@@ -177,12 +175,14 @@ class Manager
         // }       
     }
 
-        
+    /**
+   * 
+   * @param {Device} device
+   * @param {string} nometopic 
+   */  
 
-    createSubOnEventOutput(device,nometopic,eventOutput){
+    createSubOnEventOutput(device,nometopic){
         for(device of this.listDevices){
-            if(eventOutput){
-                client.publish(nometopic, device.topicListOutput[nometopic,eventOutput]);
                 client.subscribe(nometopic);              
             }
 
@@ -191,7 +191,7 @@ class Manager
             
             
     } //se viene attivato un sensore di output genera una sub sul sensore 
-} 
+
 
 
 
