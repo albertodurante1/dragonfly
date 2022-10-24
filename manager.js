@@ -24,7 +24,7 @@ client.on('message', (topic,message)=>{
 
     setInterval(function(){
         i++
-        if(i==60)
+        if(i==120)
         {
         console.log("Nessun publish negli ultimi 2 secondi");
         return existence = false;
