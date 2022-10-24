@@ -153,6 +153,7 @@ class Manager
         })
         
         client.publish("MODIFICE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
+        //potrebbe anche triggerare la funzione  createSubOnEventOutput facendo un publish solo sul sensore modificato
 
         return devicethatIwanttopubblish
 
