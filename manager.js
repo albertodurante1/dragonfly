@@ -29,7 +29,7 @@ var saveDataOnFile = function(listDevices){
 const fs = require('fs');
 fs.writeFile('listaDispositivi.txt', listDevices, function (err) {
     if (err) return console.log(err);
-    console.log('Hello World > helloworld.txt');
+    console.log('ListaDispositivi > listaDispositivi.txt');
   });
 }
 
@@ -124,7 +124,7 @@ class Manager
     triggerDevice(device, nameTopic,option) 
     {
 
-
+        //faccio una copia del device e lo mappo per farlo combaciare
         const indexOfDeviceInsideListDevices =this.listDevices.map(device=>device.name).indexOf(device.name)
 
         if(indexOfDeviceInsideListDevices<0){
@@ -135,12 +135,12 @@ class Manager
         // ora sono sicuro che c'è l'elemento
 
         const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];
-
+        
         /**
          * @type {Device}
          */
         const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
-
+        //modifico il singolo elemento 
         const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.topicListInput,deviceCopy.topicListOutput)
         devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
             if(topic.nome===nameTopic){
@@ -190,8 +190,7 @@ class Manager
             
             
             
-    } //se viene attivato un sensore di output genera una sub sul sensore 
-
+    } //se viene attivato un sensore di output genera una sub
 
 
 
