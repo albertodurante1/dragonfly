@@ -85,7 +85,7 @@ class Manager
         //let inputTopic = new Topic(nome,options); 
         //let listInputTopic= objectMessage.topicListInput
         let listInputTopic= objectMessage.topicListInput
-        let listOutputTopic= objectMessage.topicListInput        
+        let listOutputTopic= objectMessage.topicListOutput        
         //objectMessage.topicListInput
         //let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
         this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic))
