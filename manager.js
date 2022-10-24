@@ -185,7 +185,8 @@ class Manager
 
     createSubOnEventOutput(device,nometopic){
         for(device of this.listDevices){
-                client.subscribe(nometopic);              
+                client.publish(nometopic,nometopic); //publish delle modifiche
+                client.subscribe(nometopic);   //ascolto sul topic modificato 
             }
 
         }
