@@ -22,12 +22,13 @@ client.on('message', (topic,message)=>{
     objectMessage = JSON.parse(message.toString())
     i=1
 
-    setInterval(function(){
+    //aggiungere un timout per eliminare il device che non publisha piú
+    let id = setInterval(function(){
         i++
         if(i==120)
         {
         console.log("Nessun publish negli ultimi 2 secondi");
-        return existence = false;
+        clearInterval(id);
         i=1;
         }
         },2000)
