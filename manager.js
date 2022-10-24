@@ -179,11 +179,12 @@ class Manager
    * 
    * @param {Device} device
    * @param {string} nometopic 
+   * @param {string} event
    */  
 
-    createSubOnEventOutput(device,nometopic){
+    createSubOnEventOutput(device,nometopic,event){
         for(device of this.listDevices){
-                client.publish(nometopic,nometopic); //publish delle modifiche
+                client.publish(nometopic,event); //publish delle modifiche
                 client.subscribe(nometopic);   //ascolto sul topic modificato 
             }
 
