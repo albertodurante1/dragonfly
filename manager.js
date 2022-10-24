@@ -11,16 +11,28 @@ const {Device,Topic} = require('./device');
 const id = "admin";
 const  password = "mini";
 var objectMessage;
-
+var existence;
 var obj = {
     table:[]
 };
 
 
 
-//metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic
+//metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic e setta un timer dall'ultimo publish
 client.on('message', (topic,message)=>{
+    var i = 1
     objectMessage = JSON.parse(message.toString())
+    i=1
+
+    setInterval(function(){
+        i++
+        if(i==60)
+        {
+        console.log("Nessun publish negli ultimi 2 secondi");
+        return existence = false;
+        i=1;
+        }
+        },2000)
 })
 
 
@@ -41,17 +53,6 @@ fs.readFile('listaDispositivi.txt', (err, data) => {
     if (err) throw err;
     });
 }
-
-
-//funziona controllo esistenza
-var checkExistence = function(){
-    if(!client){
-       return true; 
-    }
-}
-//lunghezza del json
-// var count = Object.keys(myObject).length;
-// console.log(count);
 
 
 
@@ -95,13 +96,14 @@ class Manager
 /**
    * 
    * @param {Device} device
+   * @param {boolean} existence
    */
 
 //aggiustare qua
-    checkExistsDevice(device){
+    checkExistsDevice(device,existence){
         
             for(device of this.listDevices){
-              if(!checkExistence()){
+              if(existence){
                 let indexRemove = this.listDevices.indexOf(device);
                 this.listDevices.splice(indexRemove); //utilizzo di splice per rimuovere un determinato elemento
               }
@@ -140,7 +142,7 @@ class Manager
          * @type {Device}
          */
         const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
-        //modifico il singolo elemento 
+        //copio la lista e modifico il singolo elemento 
         const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.topicListInput,deviceCopy.topicListOutput)
         devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
             if(topic.nome===nameTopic){
