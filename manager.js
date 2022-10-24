@@ -12,9 +12,7 @@ const id = "admin";
 const  password = "mini";
 var objectMessage;
 var existence;
-var obj = {
-    table:[]
-};
+
 
 
 
