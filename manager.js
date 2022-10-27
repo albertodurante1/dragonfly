@@ -184,7 +184,7 @@ class Manager
      * 
      * @param {string} nome
      */
-      getInfoTopicInput(nome){
+    getInfoTopicInputOnDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
                 return dev.topicListInput
@@ -197,7 +197,7 @@ class Manager
      * 
      * @param {string} nome
      */
-      getInfoTopicOutput(nome){
+    getInfoTopicOutputOnDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
                 return dev.topicListOutput
@@ -210,10 +210,10 @@ class Manager
      * 
      * @param {string} nome
      */
-     getAllInfo(nome){
+     getAllInfoOnDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
-                return [this.getInfoTopicInput(nome),this.getInfoTopicOutput(nome)]
+                return [this.getInfoTopicInputOnDevice(nome),this.getInfoTopicOutputOnDevice(nome)]
 
             }
             
@@ -221,15 +221,15 @@ class Manager
     }
 
 
-    publicListOfDevices(){
+    publishListOfDevices(){
         const listaJson = JSON.stringify(this.listDevices);
         client.publish("ListaDispositivi",listaJson);
     }
 
     publishTopicInputList(){
-        let InputList;
+        let InputList = [];
         for(const dev of this.listDevices){
-             InputList = dev.topicListInput;
+             InputList.push(dev.topicListInput);
             }
         let listaIn = JSON.stringify(InputList);
         client.publish("ListaDispositivi",listaIn);
@@ -237,16 +237,40 @@ class Manager
     }
 
     publishTopicOutputList(){
-        let outputList;
+        let outputList = [];
         for(const dev of this.listDevices){
-             outputList = dev.topicListOutput;
+             outputList.push(dev.topicListOutput);
             }
         let listaOut = JSON.stringify(outputList);
         client.publish("ListaDispositivi",listaOut);
-        return outputList;
+        
     }
 
-    } 
+    getAllTopicOutput(){
+        let outputList = [];
+        for(const dev of this.listDevices){
+             outputList.push(dev.topicListOutput);
+            }
+        return outputList;
+        
+        
+    }
+
+    getAllTopicInput(){
+        let InputList = [];
+        for(const dev of this.listDevices){
+             InputList.push(dev.topicListOutput);
+            }
+        return InputList;
+        
+        
+    }
+
+    getListOfDevice(){
+        return this.listDevices;
+    }
+
+} 
 
 
 
