@@ -42,14 +42,17 @@ class Topic
    * 
    * @param {string} nome 
    * @param {string[]} options 
+   * @param {string} stato
    */
-constructor(nome,options){
+constructor(nome,options,stato){
 
   this.nome =nome;
   this.options=options;
+  this.stato = stato;
 
 } //option é una lista
 
+  
   getId(){
   return this.nome;
   }
@@ -57,6 +60,10 @@ constructor(nome,options){
   getOption(){
     return this.options;
   }
+
+  getStato(){
+    return this.stato;
+    }
 }
  
 

@@ -20,11 +20,12 @@ const addDevice = (objectMessage)=>
     
     // let inputTopic = new Topic(objectMessage.name,objectMessage.options); 
     let listInputTopic= objectMessage.topicListInput
+    let listOutputTopic= objectMessage.topicListOutput
     
     // objectMessage.topicListInput
     // let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
     // client.subscribe();
-    listDevices.push(new Device(objectMessage.name, listInputTopic, []))
+    listDevices.push(new Device(objectMessage.name, listInputTopic, listOutputTopic))
     // console.log(util.inspect(listDevices, {showHidden: false, depth: null, colors: true}))
     // console.log(listDevices) 
     const man = new Manager();
@@ -51,7 +52,7 @@ const addDevice = (objectMessage)=>
         // client.subscribe(Manager.TOPICNEWDEVICE,)
         client.on('message', (topic,message)=>{
         //    console.log({message:message.toString()})
-           const objectMessage = JSON.parse(message.toString())
+        const objectMessage = JSON.parse(message.toString())
            // console.log(jsonStr['Led1'])
             //console.log(jsonStr["Led2"])
             //vector = jsonStr["Led1"] + " \n" + jsonStr["Led2"] 

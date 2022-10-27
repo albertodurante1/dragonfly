@@ -6,22 +6,26 @@
             "options": [
                 "spento",
                 "acceso"
-            ]
+            ],
+            "stato":"spento"
         },
         {
             "nome": "Led2",
             "options": [
                 "spento",
                 "acceso"
-            ]
+            ],
+            "stato":"spento"
         }
     ],
     "topicListOutput": [
         {
             "nome": "Movimento",
             "options": [
-                "rilevato"
-            ]
+                "rilevato",
+                "non rilevato"
+            ],
+            "stato":"rilevato"
         }
     ]
 }

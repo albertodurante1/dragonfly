@@ -1,74 +1,44 @@
 var mqtt = require('mqtt')
 var client = mqtt.connect('mqtt://localhost:1883')
-
-
-
-
 const {Device,Topic} = require('./device');
+
 
 
 
 const id = "admin";
 const  password = "mini";
-var objectMessage;
-var existence;
 
 
 
 
-//metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic e setta un timer dall'ultimo publish
-client.on('message', (topic,message)=>{
-    var i = 1
-    objectMessage = JSON.parse(message.toString())
-    i=1
-
-    //aggiungere un timout per eliminare il device che non publisha piú
-    let id = setInterval(function(){
-        i++
-        if(i==120)
-        {
-        console.log("Nessun publish negli ultimi 2 secondi");
-        clearInterval(id);
-        i=1;
-        }
-        },2000)
-})
 
 
-//salvataggio su file json
-var saveDataOnFile = function(listDevices){
-const fs = require('fs');
-fs.writeFile('listaDispositivi.txt', listDevices, function (err) {
-    if (err) return console.log(err);
-    console.log('ListaDispositivi > listaDispositivi.txt');
-  });
+
+//metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic 
+
+
+function OnCallback(object){
+    client.on('message', (topic,message)=>{
+        const objectMessage = JSON.parse(message.toString())
+        object(objectMessage);
+       
+    })
 }
-
-
-//lettura dati da file json
-var readDataFromFile = function(){
-const fs = require('fs');
-fs.readFile('listaDispositivi.txt', (err, data) => {
-    if (err) throw err;
-    });
-}
-
-
 
 class Manager
 {
 
-    static TOPICNEWDEVICE = "newdevice"
+    static TOPICNEWDEVICE = "newdevice";
+    
 
     constructor()
     {
         /**
          * @type  {Device[]}
          */
-        this.listDevices= [];
-        client.subscribe(Manager.TOPICNEWDEVICE);
-        this.addDevice(objectMessage);
-        
+        this.listDevices= [];        
+        client.subscribe(Manager.TOPICNEWDEVICE); //aggiungere intervalli
+        OnCallback(obj=>{this.addDevice(obj)});
         
     }
  
@@ -82,12 +52,9 @@ class Manager
     addDevice(objectMessage)
     {   
         
-        //let inputTopic = new Topic(nome,options); 
-        //let listInputTopic= objectMessage.topicListInput
+        
         let listInputTopic= objectMessage.topicListInput
-        let listOutputTopic= objectMessage.topicListOutput        
-        //objectMessage.topicListInput
-        //let inputTopic1 = new Topic("Led",["acceso","spento"]);  //creare due sottoscrizione per acceso e spento  
+        let listOutputTopic= objectMessage.topicListOutput                  
         this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic))
 
     }
@@ -95,26 +62,41 @@ class Manager
 /**
    * 
    * @param {Device} device
-   * @param {boolean} existence
    */
 
-//aggiustare qua
-    checkExistsDevice(device,existence){
+
+    checkExistsDevice(device){
         
-            for(device of this.listDevices){
-              if(existence){
-                let indexRemove = this.listDevices.indexOf(device);
-                this.listDevices.splice(indexRemove); //utilizzo di splice per rimuovere un determinato elemento
+            for(const dev of this.listDevices){
+              if(device.name !== dev.name){
+                console.log("dispositivo non presente");
+                return false
+                
+              }else{
+                console.log("dispositivo presente");
+                return true
               }
                            
-                //pop o remove del device
+               
               }
             }
             
           
-     //controlla la presenza del dispositivo e se esiste da le sue informazioni in caso contrario lo rimuove
+     
 
+    /**
+   * 
+   * @param {Device} device
+   */
+    removeDevice(device){
+        if(this.checkExistsDevice(device) ==false){
+            let indexRemove = this.listDevices.indexOf(device);
+            this.listDevices.splice(indexRemove); //utilizzo di splice per rimuovere un determinato elemento
+        }
 
+        
+    }//controlla la presenza del dispositivo e se non esiste lo rimuove
+     //si puó anche usare pop o remove del device
     
     /**
      * 
@@ -145,7 +127,7 @@ class Manager
         const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.topicListInput,deviceCopy.topicListOutput)
         devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
             if(topic.nome===nameTopic){
-                topic.options=[option]
+                topic.stato=option
                 return topic
             }else{
                 return topic
@@ -157,24 +139,7 @@ class Manager
         //potrebbe anche triggerare la funzione  createSubOnEventOutput facendo un publish solo sul sensore modificato
 
         return devicethatIwanttopubblish
-
-
-
-
-        // for( let deviceInList of this.listDevices){
-        //     if(deviceInList.name === nameTopic){ 
-        //         if(option === '') // controllare se l'opzione arrivata combacia con quella del topic  
-        //         {
-
-        //             const deviceNewState = new Device()
-                    
-        //             client.publish(nameTopic, device.topicListInput[nameTopic,option]);
-        //         }else{
-        //             device.option = 0;
-        //          client.publish(nameTopic, device.topicListInput[nameTopic,option]);
-        //         }
-        //     }
-        // }       
+         
     }
 
     /**
@@ -185,16 +150,103 @@ class Manager
    */  
 
     createSubOnEventOutput(device,nometopic,event){
-        for(device of this.listDevices){
+        for(const dev of this.listDevices){
+            if(device === dev){
                 client.publish(nometopic,event); //publish delle modifiche
                 client.subscribe(nometopic);   //ascolto sul topic modificato 
             }
-
         }
+
+        }//se viene attivato un sensore di output genera una sub
             
+    
+
+
+     //salvataggio su file json
+    saveDataOnFile(listDevices){
+    const fs = require('fs');
+    fs.writeFile('listaDispositivi.txt', listDevices, function (err) {
+        if (err) return console.log(err);
+        console.log('ListaDispositivi > listaDispositivi.txt');
+      });
+    }
+
+
+    //lettura dati da file json
+     readDataFromFile(){
+    const fs = require('fs');
+    fs.readFile('listaDispositivi.txt', (err, data) => {
+        if (err) throw err;
+        });
+    }
+     
+     /**
+     * 
+     * @param {string} nome
+     */
+      getInfoTopicInput(nome){
+        for(const dev of this.listDevices){
+            if(dev.name === nome){
+                return dev.topicListInput
+            }
             
+        }
+    }
+
+     /**
+     * 
+     * @param {string} nome
+     */
+      getInfoTopicOutput(nome){
+        for(const dev of this.listDevices){
+            if(dev.name === nome){
+                return dev.topicListOutput
+            }
             
-    } //se viene attivato un sensore di output genera una sub
+        }
+    }
+
+    /**
+     * 
+     * @param {string} nome
+     */
+     getAllInfo(nome){
+        for(const dev of this.listDevices){
+            if(dev.name === nome){
+                return [this.getInfoTopicInput(nome),this.getInfoTopicOutput(nome)]
+
+            }
+            
+        }
+    }
+
+
+    publicListOfDevices(){
+        const listaJson = JSON.stringify(this.listDevices);
+        client.publish("ListaDispositivi",listaJson);
+    }
+
+    publishTopicInputList(){
+        let InputList;
+        for(const dev of this.listDevices){
+             InputList = dev.topicListInput;
+            }
+        let listaIn = JSON.stringify(InputList);
+        client.publish("ListaDispositivi",listaIn);
+        return InputList;
+    }
+
+    publishTopicOutputList(){
+        let outputList;
+        for(const dev of this.listDevices){
+             outputList = dev.topicListOutput;
+            }
+        let listaOut = JSON.stringify(outputList);
+        client.publish("ListaDispositivi",listaOut);
+        return outputList;
+    }
+
+    } 
 
 
 
