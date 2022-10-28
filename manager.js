@@ -33,6 +33,7 @@ class Manager
 
     constructor()
     {
+        const myInterval = setInterval(client.subscribe, 2000); //aggiorna i dispositivi ogni due secondi
         /**
          * @type  {Device[]}
          */
@@ -51,12 +52,18 @@ class Manager
    */
     addDevice(objectMessage)
     {   
-        
-        
-        let listInputTopic= objectMessage.topicListInput
-        let listOutputTopic= objectMessage.topicListOutput                  
-        this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic))
-
+        for(const dev of this.listDevices){
+        if(dev.name === objectMessage.name){
+            this.removeDevice(dev);
+            let listInputTopic= objectMessage.topicListInput
+            let listOutputTopic= objectMessage.topicListOutput                  
+            this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiorno il device giá presente con una lista aggiornata
+        }else{
+            let listInputTopic= objectMessage.topicListInput
+            let listOutputTopic= objectMessage.topicListOutput                  
+            this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiungo un device alla lista
+            }
+        }
     }
 
 /**
@@ -210,7 +217,7 @@ class Manager
      * 
      * @param {string} nome
      */
-     getAllInfoOnDevice(nome){
+     getAllInfoOfDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
                 return [this.getInfoTopicInputOnDevice(nome),this.getInfoTopicOutputOnDevice(nome)]
@@ -232,7 +239,7 @@ class Manager
              InputList.push(dev.topicListInput);
             }
         let listaIn = JSON.stringify(InputList);
-        client.publish("ListaDispositivi",listaIn);
+        client.publish("ListaDispositiviInput",listaIn);
         return InputList;
     }
 
@@ -242,7 +249,7 @@ class Manager
              outputList.push(dev.topicListOutput);
             }
         let listaOut = JSON.stringify(outputList);
-        client.publish("ListaDispositivi",listaOut);
+        client.publish("ListaDispositiviOutput",listaOut);
         
     }
 
@@ -268,6 +275,25 @@ class Manager
 
     getListOfDevice(){
         return this.listDevices;
+    }
+
+    getStateOfDevices(){
+        let dispositiviIn = [];
+        let dispositiviOut = [];
+        for(const dev of this.listDevices){
+            for(const dispI of dev.topicListInput){
+                dispositiviIn.push(dispI.nome,dispI.stato);
+                console.log(dispI.nome,dispI.stato);
+                 
+                for(const dispO of dev.topicListOutput){
+                    dispositiviOut.push(dispO.nome,dispO.stato);
+                    console.log(dispO.nome,dispO.stato)
+                }
+            }
+            return [dispositiviIn,dispositiviOut]
+
+                    
+        }
     }
 
 } 
