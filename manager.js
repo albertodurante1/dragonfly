@@ -52,15 +52,13 @@ class Manager
    */
     addDevice(objectMessage)
     {   
+        let listInputTopic= objectMessage.topicListInput
+        let listOutputTopic= objectMessage.topicListOutput
         for(const dev of this.listDevices){
         if(dev.name === objectMessage.name){
             this.removeDevice(dev);
-            let listInputTopic= objectMessage.topicListInput
-            let listOutputTopic= objectMessage.topicListOutput                  
             this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiorno il device giá presente con una lista aggiornata
         }else{
-            let listInputTopic= objectMessage.topicListInput
-            let listOutputTopic= objectMessage.topicListOutput                  
             this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiungo un device alla lista
             }
         }
