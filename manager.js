@@ -33,7 +33,7 @@ class Manager
 
     constructor()
     {
-        const myInterval = setInterval(client.subscribe, 2000); //aggiorna i dispositivi ogni due secondi
+        
         /**
          * @type  {Device[]}
          */
@@ -52,13 +52,16 @@ class Manager
    */
     addDevice(objectMessage)
     {   
-        let listInputTopic= objectMessage.topicListInput
-        let listOutputTopic= objectMessage.topicListOutput
+        
         for(const dev of this.listDevices){
         if(dev.name === objectMessage.name){
             this.removeDevice(dev);
+            let listInputTopic= objectMessage.topicListInput
+            let listOutputTopic= objectMessage.topicListOutput
             this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiorno il device giá presente con una lista aggiornata
         }else{
+            let listInputTopic= objectMessage.topicListInput
+            let listOutputTopic= objectMessage.topicListOutput
             this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiungo un device alla lista
             }
         }
@@ -140,7 +143,7 @@ class Manager
 
         })
         
-        client.publish("MODIFICE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
+        //client.publish("MODIFICHE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
         //potrebbe anche triggerare la funzione  createSubOnEventOutput facendo un publish solo sul sensore modificato
 
         return devicethatIwanttopubblish

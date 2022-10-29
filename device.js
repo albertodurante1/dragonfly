@@ -52,6 +52,18 @@ constructor(nome,options,stato){
 
 } //option é una lista
 
+
+ /**
+   * 
+   * @param {string} nome    
+   * @param {string} stato
+   */
+onstructor(nome,stato){
+
+  this.nome =nome;
+  this.stato = stato;
+
+} 
   
   getId(){
   return this.nome;

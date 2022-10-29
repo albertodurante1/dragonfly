@@ -21,10 +21,6 @@
     "topicListOutput": [
         {
             "nome": "Movimento",
-            "options": [
-                "rilevato",
-                "non rilevato"
-            ],
             "stato":"rilevato"
         }
     ]

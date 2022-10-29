@@ -3,7 +3,7 @@ const util = require('util')
 // var vec = require('device')
 const {Device,Topic }= require('./device.js')
 const  {Manager} = require('./manager.js');
-var client = mqtt.connect('mqtt://192.168.1.6:1883')
+var client = mqtt.connect('mqtt://192.168.1.19:1883')
 // var vector = []
 const listDevices= [];
 
@@ -30,9 +30,11 @@ const addDevice = (objectMessage)=>
     // console.log(listDevices) 
     const man = new Manager();
     man.listDevices=listDevices;
-    console.clear();
-    console.log(util.inspect(man.triggerDevice(objectMessage,"Led","acceso"), {showHidden: false, depth: null, colors: true}),'\n')
+    //console.clear();
+    const aa =man.triggerDevice(objectMessage,"Led1","acceso")
+    console.log("device modificato\n",util.inspect(aa, {showHidden: false, depth: null, colors: true}),'\n')
 //    console.log("Device modificato: ", man.triggerDevice(objectMessage,"Led","acceso"))
+    client.publish("MODIFICHE_SENSORI",JSON.stringify(aa));
 
 }
 
@@ -67,7 +69,7 @@ const addDevice = (objectMessage)=>
 
 
 client.on('connect', ()=>{
-    client.subscribe("TopicOutput")
+    client.subscribe("newdevice")
     // const carico =  client.subscribe("MODIFICE_SENSORI");  
     // console.log(util.inspect(carico, {showHidden: false, depth: null, colors: true}))
 })
