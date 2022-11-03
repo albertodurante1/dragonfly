@@ -42,8 +42,6 @@ class Manager
         OnCallback(obj=>{this.addDevice(obj)});
         
     }
- 
-   
 
      
   /**
@@ -69,14 +67,12 @@ class Manager
 
 /**
    * 
-   * @param {Device} device
+   * @param {String} nome
    */
-
-
-    checkExistsDevice(device){
+    checkExistsDevice(nome){
         
             for(const dev of this.listDevices){
-              if(device.name !== dev.name){
+              if(nome !== dev.name){
                 console.log("dispositivo non presente");
                 return false
                 
@@ -97,7 +93,7 @@ class Manager
    * @param {Device} device
    */
     removeDevice(device){
-        if(this.checkExistsDevice(device) ==false){
+        if(this.checkExistsDevice(device.name) ==false){
             let indexRemove = this.listDevices.indexOf(device);
             this.listDevices.splice(indexRemove); //utilizzo di splice per rimuovere un determinato elemento
         }

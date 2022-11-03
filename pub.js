@@ -1,5 +1,5 @@
 var mqtt = require('mqtt') 
-var client = mqtt.connect('mqtt://192.168.1.19:1883')
+var client = mqtt.connect('mqtt://192.168.1.4:1883')
 
 const {ex_devices} = require('./exampledevice')
 
@@ -12,7 +12,7 @@ client.on('connect', ()=>{
    
         
     // const jsonStr = JSON.parse(doc);
-    client.publish("TopicOutput", JSON.stringify(ex_devices));
+    client.publish("newdevice", JSON.stringify(ex_devices));
     
 },4000)
 })
