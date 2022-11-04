@@ -1,22 +1,10 @@
-var mqtt = require('mqtt')
 const util = require('util')
 const {Device,Topic }= require('./device.js')
-const  {Manager} = require('./manager.js');
-var client = mqtt.connect('mqtt://192.168.1.4:1883')
-const man = new Manager();
+const  Manager = require('./manager.js');
+const man = new Manager("admin","1234567",'mqtt://127.0.0.1:1883',device=>{console.log(device) });
 
-var listaDispositivi = [];
+console.log("parto prima",man.getInfoTopicInputOnDevice("esp"));
 
   
 
 
-client.on('connect', ()=>{
-    
-    listaDispositivi = new man.listDevices;
-   
-  
-
-    console.log("listaDispositivi\n",util.inspect(listaDispositivi, {showHidden: false, depth: null, colors: true}),'\n')
-    // const carico =  client.subscribe("MODIFICE_SENSORI");  
-    // console.log(util.inspect(carico, {showHidden: false, depth: null, colors: true}))
-})

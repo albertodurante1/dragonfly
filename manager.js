@@ -1,12 +1,11 @@
 var mqtt = require('mqtt')
-var client = mqtt.connect('mqtt://localhost:1883')
+
 const {Device,Topic} = require('./device');
 
 
 
 
-const id = "admin";
-const  password = "mini";
+
 
 
 
@@ -17,8 +16,9 @@ const  password = "mini";
 //metodo di callback che assegna alla variabile objectMessage i dati presi dal sub su un topic 
 
 
+
 function OnCallback(object){
-    client.on('message', (topic,message)=>{
+    this.client.on('message', (topic,message)=>{
         const objectMessage = JSON.parse(message.toString())
         object(objectMessage);
        
@@ -31,39 +31,54 @@ class Manager
     static TOPICNEWDEVICE = "newdevice";
     
 
-    constructor()
+
+    constructor(id,password,host,onNewDevice)
     {
         
-        /**
-         * @type  {Device[]}
-         */
-        this.listDevices= [];        
-        client.subscribe(Manager.TOPICNEWDEVICE); //aggiungere intervalli
-        OnCallback(obj=>{this.addDevice(obj)});
+        this.id = id; 
+        this.password = password;
+        this.listDevices = [];
+        this.client = mqtt.connect(host)
+        this.client.subscribe(Manager.TOPICNEWDEVICE); //aggiungere intervalli
+        OnCallback(obj=>{            
+        this.addDevice(obj)
+        onNewDevice(obj)
+        });
+        
         
     }
 
-     
+   
   /**
    * 
    * @param {Device} objectMessage 
    */
     addDevice(objectMessage)
     {   
+        //console.log(objectMessage)
         
-        for(const dev of this.listDevices){
-        if(dev.name === objectMessage.name){
-            this.removeDevice(dev);
+      //  for(const dev of this.listDevices){
+      //  if(dev.name === objectMessage.name){
+      //      this.removeDevice(dev);
+      //      let listInputTopic= objectMessage.topicListInput
+      //      let listOutputTopic= objectMessage.topicListOutput
+      //      this.listDevices.push //aggiorno il device giá presente con una lista aggiornata
+      //  }else{
             let listInputTopic= objectMessage.topicListInput
             let listOutputTopic= objectMessage.topicListOutput
-            this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiorno il device giá presente con una lista aggiornata
-        }else{
-            let listInputTopic= objectMessage.topicListInput
-            let listOutputTopic= objectMessage.topicListOutput
-            this.listDevices.push(new Device(objectMessage.name, listInputTopic,listOutputTopic)) //aggiungo un device alla lista
-            }
-        }
+            let a = new Device(objectMessage.name,listInputTopic,listOutputTopic)
+            this.listDevices.push(a)
+            
+            //console.log(listInputTopic)
+           //console.log(listOutputTopic)
+            //console.log(a)
+            
+             //aggiungo un device alla lista
     }
+      //  }
+   // }
+
+
 
 /**
    * 
@@ -104,7 +119,7 @@ class Manager
     
     /**
      * 
-     * @param {Device } device 
+     * @param {Device} device 
      * @param {string} nameTopic 
      * @param {string} option 
      */
@@ -156,8 +171,8 @@ class Manager
     createSubOnEventOutput(device,nometopic,event){
         for(const dev of this.listDevices){
             if(device === dev){
-                client.publish(nometopic,event); //publish delle modifiche
-                client.subscribe(nometopic);   //ascolto sul topic modificato 
+                this.client.publish(nometopic,event); //publish delle modifiche
+                this.client.subscribe(nometopic);   //ascolto sul topic modificato 
             }
         }
 
@@ -227,7 +242,7 @@ class Manager
 
     publishListOfDevices(){
         const listaJson = JSON.stringify(this.listDevices);
-        client.publish("ListaDispositivi",listaJson);
+        this.client.publish("ListaDispositivi",listaJson);
     }
 
     publishTopicInputList(){
@@ -236,7 +251,7 @@ class Manager
              InputList.push(dev.topicListInput);
             }
         let listaIn = JSON.stringify(InputList);
-        client.publish("ListaDispositiviInput",listaIn);
+        this.client.publish("ListaDispositiviInput",listaIn);
         return InputList;
     }
 
@@ -246,27 +261,7 @@ class Manager
              outputList.push(dev.topicListOutput);
             }
         let listaOut = JSON.stringify(outputList);
-        client.publish("ListaDispositiviOutput",listaOut);
-        
-    }
-
-    getAllTopicOutput(){
-        let outputList = [];
-        for(const dev of this.listDevices){
-             outputList.push(dev.topicListOutput);
-            }
-        return outputList;
-        
-        
-    }
-
-    getAllTopicInput(){
-        let InputList = [];
-        for(const dev of this.listDevices){
-             InputList.push(dev.topicListOutput);
-            }
-        return InputList;
-        
+        this.client.publish("ListaDispositiviOutput",listaOut);
         
     }
 
@@ -274,10 +269,11 @@ class Manager
         return this.listDevices;
     }
 
-    getStateOfDevices(){
+    getStateOfDevices(nome){
         let dispositiviIn = [];
         let dispositiviOut = [];
         for(const dev of this.listDevices){
+            if(dev.name == nome){
             for(const dispI of dev.topicListInput){
                 dispositiviIn.push(dispI.nome,dispI.stato);
                 console.log(dispI.nome,dispI.stato);
@@ -287,6 +283,8 @@ class Manager
                     console.log(dispO.nome,dispO.stato)
                 }
             }
+
+        }
             return [dispositiviIn,dispositiviOut]
 
                     
@@ -298,5 +296,5 @@ class Manager
 
 
 
-module.exports = {Manager};
+module.exports = Manager;
 
