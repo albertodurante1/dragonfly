@@ -3,7 +3,7 @@ const util = require('util')
 // var vec = require('device')
 const {Device,Topic }= require('./device.js')
 const  Manager = require('./manager.js');
-var client = mqtt.connect('mqtt://172.29.21.89:1883')
+var client = mqtt.connect('mqtt://127.0.0.1:1883')
 // var vector = []
 const listDevices= [];
 
@@ -31,8 +31,8 @@ const addDevice = (objectMessage)=>
     const man = new Manager();
     man.listDevices=listDevices;
     //console.clear();
-    const aa =man.triggerDevice(objectMessage,"Led1","acceso")
-    console.log("device modificato\n",util.inspect(man.triggerDevice(objectMessage,"Led","acceso"), {showHidden: false, depth: null, colors: true}),'\n')
+    const aa =man.triggerDevice("esp","Led","acceso")
+    console.log("device modificato\n",util.inspect(aa, {showHidden: false, depth: null, colors: true}),'\n')
    //console.log("Device modificato: ", man.triggerDevice(objectMessage,"Led","acceso"))
     client.publish("MODIFICHE_SENSORI",JSON.stringify(aa));
 

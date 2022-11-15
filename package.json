@@ -6,6 +6,7 @@
     "express-openid-connect": "^2.8.0",
     "mosca": "^2.8.3",
     "mqtt": "^4.3.7",
-    "net": "^1.0.2"
+    "net": "^1.0.2",
+    "ping": "^0.4.2"
   }
 }
