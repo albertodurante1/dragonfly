@@ -4,6 +4,7 @@ var ping = require('ping');
 const {Device,Topic} = require('./device');
 const {Ipaddress} = require('./ipAddress');
 const { timeStamp } = require('console');
+const exec = require("child_process").exec;
 
 
 
@@ -31,29 +32,26 @@ class Manager
     
      OnCallback(object){
         this.client.on('message', (topic,message)=>{
-    
-            if(topic == Manager.TOPICNEWDEVICE){
-                const objectMessage = JSON.parse(message.toString())
-                this.addDevice(objectMessage);
-            }
+            const objectMessage = JSON.parse(message.toString())
+            switch(topic){
+                case Manager.TOPICNEWDEVICE:
+                    this.addDevice(objectMessage);
+                    break;
+                case Manager.TOPICSENSORTRIGGERED:
+                    this.updateSensorOutPut(objectMessage);
+                    break;
+                case Manager.TOPICMODIFICHESENSORI:
+                    this.updateSensorInPut(objectMessage);
+                    break;
+                case Manager.IPADDRESS:
+                    this.ipAdd(objectMessage);
+                    break;
 
-            if(topic == Manager.TOPICSENSORTRIGGERED){
-                const objectMessage = JSON.parse(message.toString())
-                this.updateSensorOutPut(objectMessage);
+                default:this.triggerSensorInput(objectMessage)
+                break;
             }
-    
-            if(topic == Manager.TOPICMODIFICHESENSORI){
-                const objectMessage = JSON.parse(message.toString())
-                this.updateSensorInPut(objectMessage);
-            }
-            
-            if(topic == Manager.IPADDRESS){
-                const objectMessage = JSON.parse(message.toString())
-                this.listOfIpAddress.push(objectMessage[1])
-                this.ipAdd(objectMessage)
-                
-            }
-            
+           
+           
            
         })
 
@@ -72,10 +70,9 @@ class Manager
         
         this.id = id; 
         this.password = password;
-        this.listDevices = [];
-        this.listOfIpAddress = [];
+        this.listDevices = [];       
         this.listOfIpConnection = [];
-        this.client = mqtt.connect(host,{keepalive :60})        
+        this.client = mqtt.connect(host)        
         this.OnCallback(obj=>{            
         onNewDevice(obj)
         });
@@ -123,13 +120,44 @@ class Manager
    
 
      ipAdd(objectMessage){
-        let a = new Ipaddress(objectMessage[0],objectMessage[1],objectMessage[2])
-        this.listOfIpConnection.push(a)
-        for(const topic of objectMessage[2]){
-            this.client.subscribe(topic);
+        let a = new Ipaddress(objectMessage[0],objectMessage[1],objectMessage[2]);
+        this.listOfIpConnection.push(a);        
+        if(!Array.isArray(objectMessage[2])){
+            this.client.subscribe(objectMessage[2])
+        }else{
+            for(const topic of objectMessage[2]){
+                this.client.subscribe(topic);
+            }
         }
-        console.log(this.listOfIpConnection)
+        
+        //console.log(this.listOfIpConnection)
      }
+
+     ipAddress(){
+        for(let a of this.listOfIpConnection){
+           return a.ip
+        } 
+     }
+
+    triggerSensorInput(objectMessage) 
+    {
+        console.log("sono entrato nella modifica")
+       for(const dev of this.listDevices){    
+            for(const a of dev.topicListOutput){                   
+                if(a.nome === objectMessage[0]){
+                    a.stato = objectMessage[1]
+                }
+                
+        }
+       }
+    }
+       
+
+        
+        
+    
+         
+    
     
     triggerDevice(name, nameTopic,option) 
     {
@@ -170,15 +198,15 @@ class Manager
 
     /**
    * 
-   * @param {Device} device
+   * @param {String} nome
    * @param {string} nometopic 
    * @param {string} event
    */  
 
-    createSubOnEventOutput(device,nometopic,event){
+    
+    createSubOnEventOutput(nome,nometopic,event){
         for(const dev of this.listDevices){
-            if(device.name === dev.name){
-                this.client.publish(nometopic,event); //publish delle modifiche
+            if(nome === dev.name){
                 this.client.subscribe(nometopic);   //ascolto sul topic modificato 
             }
         }
@@ -219,6 +247,8 @@ class Manager
         }
     }   
     
+   
+
 
     unSubOnEvent(nameTopic){
         this.client.unsubscribe(nameTopic);
@@ -339,30 +369,32 @@ class Manager
                     
         }
     }
-
-
+  
     
-
-    pingDevice(hosts){
-      
-        hosts.forEach(function(host){
-            ping.sys.probe(host, function(isAlive){
-                if(!isAlive){
-                    for (const a of this.listOfIpConnection){
-                        if(host == a.ip){
-                            this.removeDevice(a.nome);
-                            for(const topic of a.topic){
-                                this.client.unSubOnEvent(topic)
-                            }
-                        }
-
-                    }
-                    
-                }
-        
-            });
-         });
+    unSubDeadDevice(r){
+        this.removeDevice(r.nome) //rimozione device dalla lista
+        for(const topic of r.topic){ //unsub sui topic del device
+            this.client.unsubscribe(topic)
+        }
     }
+
+     pingAllDevice(){
+
+        for(const a of this.listOfIpConnection){
+              
+             ping.sys.probe(a.ip, Alive =>{
+            // @ts-ignore
+            if (!Alive) {  exec("rimozione listner",this.unSubDeadDevice(a)) }      
+                      });   
+                
+        }         
+              
+         
+        
+        
+    }         
+     
+    
 
 } 
 

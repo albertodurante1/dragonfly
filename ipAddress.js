@@ -16,11 +16,11 @@ constructor(nome,ip,listTopic){
   return this.nome;
   }
 
-  getOption(){
+  getIp(){
     return this.ip;
   }
 
-  getStato(){
+  getTopic(){
     return this.topic;
     }
 }

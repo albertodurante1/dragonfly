@@ -10,14 +10,15 @@ const  Manager = require('./manager.js');
   
 const man = new Manager("admin","1234567",'mqtt://127.0.0.1:1883', device=>{console.log("device \n",util.inspect(device, {showHidden: false, depth: null, colors: true}),'\n') });
         
-
-// const checkTimeout = ()=>{
+let ipad = ["movimento","rilevato"];
+ const checkTimeout = ()=>{console.log("device \n",util.inspect(man.listDevices, {showHidden: false, depth: null, colors: true}),'\n')}
 //     console.log("aggiunta\n",util.inspect(man.listDevices, {showHidden: false, depth: null, colors: true}),'\n')
 //     console.log("modifiche\n",util.inspect(man.triggerDevice("esp","Led1","acceso"), {showHidden: false, depth: null, colors: true}),'\n')
 //     //man.removeDevice("esp");
 //    //console.log("elemento rimosso\n",util.inspect(man.listDevices, {showHidden: false, depth: null, colors: true}),'\n')
 // 
-          
-// const myTimeout = setTimeout(checkTimeout, 20000);
+ //man.pingDevice();      
+ 
+ const myTimeout = setTimeout(checkTimeout, 10000);
 
 //console.log("aggiunta\n",console.log(man.getListOfDevice()));
