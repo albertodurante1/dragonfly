@@ -51,19 +51,11 @@ constructor(nome,options,stato){
   this.stato = stato;
 
 } //option é una lista
+ 
+static topic2Val(nome,stato){
+  return new Topic(nome,null,stato);
+} //istanza del costruttore di topic con solo 2 valori nome e stato
 
-
- /**
-   * 
-   * @param {string} nome    
-   * @param {string} stato
-   */
-onstructor(nome,stato){
-
-  this.nome =nome;
-  this.stato = stato;
-
-} 
   
   getId(){
   return this.nome;

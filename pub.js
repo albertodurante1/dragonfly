@@ -1,5 +1,5 @@
 var mqtt = require('mqtt') 
-var client = mqtt.connect('mqtt://127.0.0.1:1883',{keepalive :20})
+var client = mqtt.connect('mqtt://192.168.127.247:1883')
 
 const {ex_devices} = require('./exampledevice')
 
@@ -12,10 +12,10 @@ client.on('connect', ()=>{
    
         
     
-    client.publish("newdevice", JSON.stringify(ex_devices), {retain: true });
+    //client.publish("newdevice", JSON.stringify(ex_devices), {retain: true });
     let ipad = ["esp","127.0.0.1","topic"]
     let ipad2 = ["esp2",'192.168.1.69',["topic1","topic2"]]
-    client.publish("infoIP",JSON.stringify(ipad),{retain:true})
+    client.publish("infoIP",JSON.stringify(ipad))
     client.publish("infoIP",JSON.stringify(ipad2))  
     
 },2000)
@@ -41,7 +41,7 @@ client.on('connect', ()=>{
 // }
 
 
-let ipad4 = ["Movimento","rilevato"];
+ let ipad4 = [{"nome": "Movimento","stato":"rilevato"}];
  const checkTimeout = ()=>{client.publish("topic",JSON.stringify(ipad4))}
  
 //     console.log("aggiunta\n",util.inspect(man.listDevices, {showHidden: false, depth: null, colors: true}),'\n')
@@ -51,7 +51,7 @@ let ipad4 = ["Movimento","rilevato"];
 // 
  //man.pingDevice();      
  
- const myTimeout = setTimeout(checkTimeout, 5000);
+ const myTimeout = setTimeout(checkTimeout, 12000);
 
 
 
