@@ -50,11 +50,22 @@ const man = new Manager("admin","1234567",'mqtt://192.168.127.247:1883', device=
    
  
  const myTimeout3 = setTimeout(checkTimeout3, 20000);
+
+ const checkTimeout5 = ()=>{
+    
+    man.triggerDevice("esp","Led1","spento");
+    
+    
+}
+
+   
+ 
+ const myTimeout5 = setTimeout(checkTimeout5, 22000);
   
  
 
  const checkTimeout4 = ()=>{
-    man.triggerDevice("esp","Led1","spento");
+    
     man.triggerDevice("esp","Led2","spento");
     
     
