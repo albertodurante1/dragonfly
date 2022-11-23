@@ -22,7 +22,7 @@ String topO[2] = {"movimento","topicdiff"};
  const char* ssid = "WIFIBETTO"; //inserire ssid della connessione
  const char* pass = "77777777";
 
- const char* mqtt_server = "192.168.127.247"; //inserire indirizzo ip del server 127.0.0.1 non funziona
+ const char* mqtt_server = "192.168.155.247"; //inserire indirizzo ip del server 127.0.0.1 non funziona
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -36,14 +36,13 @@ char* gass = "gas";
 Topic led1("Led1",stato,2,"spento");
 Topic led2("Led2",stato,2,"spento");
 Topic mov("Movimento","non rilevato");
-Topic pres("Pressione","non rilevato");
+Topic gas("Carbonio",String (analogRead(5)));
 Topic topicInput[20]={led1,led2};
-Topic topicOutput[20] = {mov};
+Topic topicOutput[20] = {gas};
 Device dispositivo("esp",topicInput,topicOutput);
 
  
- int a = 2;
-//long ms=digitalRead(16);
+
 
 
 //stabilire connessione wifi
@@ -128,6 +127,7 @@ void reconnect() {
       client.publish("DispositivoConnesso", "connesso");      
       client.subscribe("MODIFICHE_SENSORI");
       client.publish("newdevice", dispositivo.getJson("esp",topicInput,topicOutput));   
+      doc.clear();
       client.publish("infoIP",jsonIP);
       doc.clear();            
       } else {

@@ -8,7 +8,7 @@
 
 
 char jsonStr[1000];
-DynamicJsonDocument doc(1024);
+DynamicJsonDocument doc(2048);
 JsonObject obj=doc.as<JsonObject>();
 
  
@@ -74,27 +74,41 @@ Topic getElementO(Topic Out[],int i){
  char* getJson(String i,Topic topI[],Topic topO[]){
     doc["name"]=i;
     JsonArray topicListInput = doc.createNestedArray("topicListInput");
+
     JsonObject s1 = topicListInput.createNestedObject();
     JsonObject s2 = topicListInput.createNestedObject(); 
+
     Topic led1=getElementI(topI,0);
     Topic led2=getElementI(topI,1);
+
     s1["nome"]= led1.getNome();
     JsonArray options = s1.createNestedArray("options");
     for(int i=0; i<(led1.getLenght()) ;i++){
     options.add(led1.getOpzione(i));
     };
     s1["stato"] = led1.getStato();
+
+  
     s2["nome"]= led2.getNome();
     JsonArray options2 = s2.createNestedArray("options");
     for(int i=0; i<(led2.getLenght()) ;i++){
     options2.add(led2.getOpzione(i));
     };
     s2["stato"] = led2.getStato();
+
     JsonArray topicListOutput = doc.createNestedArray("topicListOutput");
-    JsonObject o1 = topicListOutput.createNestedObject(); 
-    Topic mov =getElementO(topO,0);
-    o1["nome"]= mov.getNome();
-    o1["stato"] = mov.getVal();
+
+    JsonObject o2 = topicListOutput.createNestedObject(); 
+    
+
+    Topic gas =getElementO(topO,0);
+    
+
+    o2["nome"]= gas.getNome();
+    o2["stato"] = gas.getVal();
+       
+    
+    
     serializeJson(doc,jsonStr);
     return jsonStr;
  }
