@@ -6,11 +6,14 @@ class Device {
    * @param {Topic[]} topicListInput 
    * @param {Topic[]} topicListOutput 
    */
-  constructor(name, topicListInput,topicListOutput) {
+  constructor(name,ip, topicListInput,topicListOutput) {
     /**
      * @type {string}
      */
     this.name = name;
+
+    this.ip = ip;
+
     /**
      * @type {Topic[]}
      */
@@ -23,6 +26,9 @@ class Device {
 
   }
 
+  getIp(){
+    return this.ip;
+  }
   getName(){
     return this.name;
   }

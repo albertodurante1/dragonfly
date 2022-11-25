@@ -1,5 +1,6 @@
  const ex_devices={
     "name": "esp",
+    "ip":"127.0.0.1",
     "topicListInput": [
         {
             "nome": "Led",

@@ -8,29 +8,57 @@ const exec = require("child_process").exec;
 
 class Manager
 {
-    static IPADDRESS = "infoIP";
+    static PINGDEVICE = "pingdevice";
+    static LISTDEVICES = "listDevices";
     static TOPICNEWDEVICE = "newdevice";
-    static TOPICSENSORTRIGGERED = "OutTriggered";
-    static TOPICMODIFICHESENSORI = "MODIFICHE_SENSORI";
+    static TOPICSENSORTRIGGERED = "readTopic";
+    static TOPICMODIFICHESENSORI = "writeTopic";
+    static LISTTOPICDEVICE ="listTopicsDevice";
+    static SUBONTOPIC = "subOnTopic";
+    static UNSUBONTOPIC = "unSubOnTopic";
+    static REQUESTIP= "requestIP"
+    static SENSORTRIGGERED = "outputtriggered";
+
     
      OnCallback(object){
         this.client.on('message', (topic,message)=>{
             const objectMessage = JSON.parse(message.toString())
             switch(topic){
                 case Manager.TOPICNEWDEVICE:
-                    this.addDevice(objectMessage);
+                    this.addDevice(objectMessage);                   
                     break;
                 case Manager.TOPICSENSORTRIGGERED:
                     this.updateSensorOutPut(objectMessage);
                     break;
                 case Manager.TOPICMODIFICHESENSORI:
-                    this.updateSensorInPut(objectMessage);
+                    this.triggerDevice(objectMessage);
                     break;
-                case Manager.IPADDRESS:
-                    this.ipAdd(objectMessage);
+                case Manager.PINGDEVICE:
+                    this.pingAllDevice();
                     break;
-
-                default:this.triggerSensorInput(objectMessage)
+                case Manager.LISTDEVICES:
+                    this.getListOfDevice();
+                    break;
+                case Manager.LISTTOPICDEVICE:
+                    this.publishListOfDevices();
+                    break;
+                case Manager.SUBONTOPIC:
+                    this.subOnTopic();
+                    break;
+                case Manager.UNSUBONTOPIC:
+                    this.unSubOnEvent(objectMessage);
+                    break;
+                case Manager.SENSORTRIGGERED:
+                    this.updateSensorOutPut(objectMessage);
+                    break
+                case Manager.REQUESTIP:
+                    this.ipAddressOfDevice(objectMessage);
+                    break
+                case Manager.TOPICMODIFICHESENSORI:
+                    this.getStatusoFTopicOutputOnDevice(objectMessage);
+                    break
+                    
+                default:this.client.publish(topic,"questo topic non é stato ancora gestito");
                 break;
             }
            
@@ -42,7 +70,8 @@ class Manager
             this.client.subscribe(Manager.TOPICNEWDEVICE);
             this.client.subscribe(Manager.TOPICSENSORTRIGGERED);
             this.client.subscribe(Manager.TOPICMODIFICHESENSORI);
-            this.client.subscribe(Manager.IPADDRESS);
+            this.client.subscribe(Manager.PINGDEVICE);
+            this.client.subscribe(Manager.LISTDEVICES);
         })
 
         
@@ -54,8 +83,7 @@ class Manager
         this.id = id; 
         this.password = password;
         this.listDevices = [];       
-        this.listOfIpConnection = [];
-        this.client = mqtt.connect(host)        
+        this.client = mqtt.connect(host,{clientId:id})        
         this.OnCallback(obj=>{            
         onNewDevice(obj)
         });
@@ -73,7 +101,7 @@ class Manager
         //console.log(objectMessage)
         let listInputTopic= objectMessage.topicListInput
         let listOutputTopic= objectMessage.topicListOutput
-        let a = new Device(objectMessage.name,listInputTopic,listOutputTopic)
+        let a = new Device(objectMessage.name,objectMessage.ip,listInputTopic,listOutputTopic)
        
     if(this.listDevices.length === 0 ){
         this.listDevices.push(a) 
@@ -100,26 +128,15 @@ class Manager
     //controlla la presenza del dispositivo e se non esiste lo rimuove
      //si puó anche usare pop o remove del device
     
-   
+       
 
-     ipAdd(objectMessage){
-        let a = new Ipaddress(objectMessage.nome,objectMessage.ip,objectMessage.topic);
-        this.listOfIpConnection.push(a);        
-        if(!Array.isArray(objectMessage.topic)){
-            this.client.subscribe(objectMessage.topic)
-        }else{
-            for(const topic of objectMessage.topic){
-                this.client.subscribe(topic);
+     ipAddressOfDevice(nome){
+        for(let a of this.listDevices){
+            if(a.nome == nome){
+                this.client.publish("requestIP",a.ip);
             }
-        }
-        
-        //console.log(this.listOfIpConnection)
-     }
-
-     ipAddress(){
-        for(let a of this.listOfIpConnection){
-           return a.ip
-        } 
+            
+         } 
      }
 
     triggerSensorInput(objectMessage) 
@@ -139,11 +156,20 @@ class Manager
 
         
         
-    
+   subOnTopic(topic){
+    //controlliamo se topic sia una lista di topic o un solo topic
+    if(Array.isArray(topic)){
+        for(const a of topic){ //unsub sui topic del device
+        this.client.subscribe(a)
+    }}else{
+        this.client.subscribe(topic);
+    }
+    this.client.subscribe(topic);
+   } 
          
     
     
-    triggerDevice(name, nameTopic,option) 
+    triggerDevice(objectMessage) 
     {
 
         //faccio una copia del device e lo mappo per farlo combaciare
@@ -163,20 +189,30 @@ class Manager
          */
         const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
         //copio la lista e modifico il singolo elemento 
-        const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.topicListInput,deviceCopy.topicListOutput)
-        devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
-            if(topic.nome===nameTopic){
-                topic.stato=option
-                return topic
+        const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.ip,deviceCopy.topicListInput,deviceCopy.topicListOutput)
+        for(const dev of this.listDevices){
+            if(dev.name == objectMessage.nome){
+                devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
+                    if(topic.nome===objectMessage.topic){
+                        topic.stato=objectMessage.option;
+                        return topic;
+                        
+                    }else{
+                        return topic;
+                    }
+        
+                })
+                this.addDevice(devicethatIwanttopubblish);
             }else{
-                return topic
+                this.client.publish("writeTopic","nessun device con nome corrispondente trovato"); //risponde alla richiesta 
             }
-
-        })
+           
+        }
+        
         
         this.client.publish("MODIFICHE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
-         //aggiorna lo stato dei dispositivi 
-        return devicethatIwanttopubblish
+         //pubblica lo stato dei dispositivi aggiornato
+        
          
     }
 
@@ -192,6 +228,8 @@ class Manager
 
         }//se viene attivato un sensore di output genera una sub
      
+
+
     updateSensorOutPut(objectMessage){
         for (const dev of this.listDevices){
             if(dev.name == objectMessage.name){
@@ -203,40 +241,16 @@ class Manager
                     }
                     const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];
                     const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList));
-                    const updatedDevice = new Device(deviceCopy.name,deviceCopy.topicListInput,objectMessage.topicListOutput);
+                    const updatedDevice = new Device(deviceCopy.name,deviceCopy.ip,deviceCopy.topicListInput,objectMessage.topicListOutput);
                     this.addDevice(updatedDevice);
             }else{
-                return "non esiste elemento nella lista dei Dispositivi"
+                return "non esiste l'elemento nella lista dei Dispositivi"
             } 
         }
     }   
 
-    updateSensorInPut(objectMessage){
-        for (const dev of this.listDevices){
-            if(dev.name == objectMessage.name){
-                const indexOfDeviceInsideListDevices =this.listDevices.map(device=>device.name).indexOf(dev.name)
-
-                    if(indexOfDeviceInsideListDevices<0){
-                    console.log(' Il device non è presente nella lista!')
-                    return 
-                    }
-                    const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];
-                    const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList));
-                    const updatedDevice = new Device(deviceCopy.name,objectMessage.topicListInput,deviceCopy.topicListOutput);
-                    this.addDevice(updatedDevice);
-            } else{
-                return "non esiste elemento nella lista dei Dispositivi"
-            } 
-        }
-    }   
     
-   
-
-
-    unSubOnEvent(nameTopic){
-        this.client.unsubscribe(nameTopic);
-    }
-
+    
 
      //salvataggio su file json
     saveDataOnFile(listDevices){
@@ -293,46 +307,88 @@ class Manager
      getAllInfoOfDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
-                return [this.getInfoTopicInputOnDevice(nome),this.getInfoTopicOutputOnDevice(nome)]
+                const listaJsonTopic = JSON.stringify(this.getInfoTopicInputOnDevice(nome),this.getInfoTopicOutputOnDevice(nome));
+                this.client.publish("listTopicsDevice",listaJsonTopic,{retain:true});
+                
+            }else{
+                this.client.publish("listTopicsDevice","dispositivo non presente");
+            }
+            
+        }
+    }
 
+    getStatusoFTopicOutputOnDevice(nomeDisp,nomeTopic){
+        for(const dev of this.listDevices){
+            if(dev.name === nomeDisp){
+                for (const top of dev.topicListOutput)
+                    if(top.nome == nomeTopic){
+                        this.client.publish("readTopic",top.stato);
+                    }
             }else{
                 return "dispositivo non presente"
             }
             
         }
     }
+    unSubOnEvent(topic){
+        //controlliamo se topic sia una lista di topic o un solo topic
+        if(Array.isArray(topic)){
+            for(const a of topic){ //unsub sui topic del device
+            this.client.unsubscribe(a);
+        }}else{
+            this.client.unsubscribe(topic);
+        }
+        
+        
+    }
 
 
     publishListOfDevices(){
         const listaJson = JSON.stringify(this.listDevices);
-        this.client.publish("ListaDispositivi",listaJson);
+        this.client.publish("listDevices",listaJson,{retain:true});
     }
 
-    publishTopicInputList(){
+    publicNameOfAllDevice(){
+
+        const listNameOfDevices = [];
+        for(const a of this.listDevices){
+            listNameOfDevices.push(a.name);
+        }
+        const listaJson = JSON.stringify(listNameOfDevices);
+        this.client.publish("nameOfAllDevice", listaJson);
+    }
+
+    publishTopicInputList(nomeD){
         let InputList = [];
         for(const dev of this.listDevices){
+            if(dev.nome==nomeD){
+                InputList.push(dev.topicListInput);
+            }
              InputList.push(dev.topicListInput);
             }
         let listaIn = JSON.stringify(InputList);
-        this.client.publish("ListaDispositiviInput",listaIn);
-        return InputList;
+        this.client.publish("DeviceInputList",listaIn);
+        
     }
 
-    publishTopicOutputList(){
+    publishTopicOutputList(nomeD){
         let outputList = [];
         for(const dev of this.listDevices){
+            if(dev.nome==nomeD){
+                outputList.push(dev.topicListOutput);
+            }
              outputList.push(dev.topicListOutput);
             }
         let listaOut = JSON.stringify(outputList);
-        this.client.publish("ListaDispositiviOutput",listaOut);
+        this.client.publish("DeviceOutputList",listaOut);
         
     }
 
     getListOfDevice(){
         if(this.listDevices.length === 0 ){
-            return "non ci sono dispositivi connessi"
+            this.client.publish("listDevices","non ci sono dispositivi connessi"); 
         }else{
-            return this.listDevices; 
+            this.publishListOfDevices(); 
         }
         
     }
@@ -351,9 +407,10 @@ class Manager
                     console.log(dispO.nome,dispO.stato)
                 }
             }
-            return [dispositiviIn,dispositiviOut]
+            const topicDevice = JSON.stringify(dispositiviIn,dispositiviOut);
+            this.client.publish("topicDevice",topicDevice);
         }else{
-            return "nessun dispositivo corrisponde al nome indicato"
+            this.client.publish("topicDevice","nessun dispositivo corrisponde al nome indicato");
         }
             
 
@@ -362,23 +419,21 @@ class Manager
     }
   
     
-    unSubDeadDevice(r){
+    removeDeadDevice(r){
         console.log("rimozione dispositivo Inattivo: ", r.ip);
         this.removeDevice(r.nome) //rimozione device dalla lista
-        for(const topic of r.topic){ //unsub sui topic del device
-            this.client.unsubscribe(topic)
-        }
+        
     }
 
      pingAllDevice(){
 
-        for(const a of this.listOfIpConnection){
+        for(const a of this.listDevices){
               
              ping.sys.probe(a.ip, Alive =>{
                 var msg = Alive ? 'host ' + a.ip + ' é attivo' : 'host ' + a.ip + ' non attivo';
                 console.log(msg);
             // @ts-ignore
-            if (!Alive) {  exec("rimozione listner",this.unSubDeadDevice(a)) }      
+            if (!Alive) {  exec("rimozione listner",this.removeDeadDevice(a)) }      
                       });   
                 
         }         
