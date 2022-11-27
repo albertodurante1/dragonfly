@@ -8,7 +8,7 @@ const  Manager = require('./manager.js');
 //console.log("parto prima",man.listDevices)
 
   
-const man = new Manager("admin","1234567",'mqtt://192.168.155.247:1883', device=>{console.log("device \n",util.inspect(device, {showHidden: false, depth: null, colors: true}),'\n') });
+const man = new Manager("admin","1234567",'mqtt://192.168.155.247:1883');
         
 
  const checkTimeout = ()=>{console.log("device \n",util.inspect(man.listDevices, {showHidden: false, depth: null, colors: true}),'\n')}
