@@ -9,7 +9,7 @@ const exec = require("child_process").exec;
 class Manager
 {
     
-    static LISTDEVICES = "listDevices";
+    static LISTDEVICES = "listDevice";
     static TOPICNEWDEVICE = "newdevice";
     static TOPICSENSORTRIGGERED = "readTopic";
     static TOPICMODIFICHESENSORI = "writeTopic";
@@ -40,7 +40,7 @@ class Manager
                     this.getListOfDevice();
                     break;
                 case Manager.LISTTOPICDEVICE:
-                    this.publishListOfDevices();
+                    this.getAllInfoOfDevice(objectMessage);
                     break;
                 case Manager.SUBONTOPIC:
                     this.subOnTopic();
@@ -165,40 +165,37 @@ class Manager
     
     triggerDevice(objectMessage) 
     {
-        //faccio una copia del device e lo mappo per farlo combaciare
-        const indexOfDeviceInsideListDevices =this.listDevices.map(device=>device.name).indexOf(name)
-
+        const indexOfDeviceInsideListDevices = this.listDevices.findIndex(obj =>{return obj.name ===objectMessage.name});
+       
         if(indexOfDeviceInsideListDevices<0){
            console.log(' Il device non è presente nella lista!')
+           this.client.publish("writeTopic","Il device non è presente nella lista!")
            return 
-        }
-        // ora sono sicuro che c'è l'elemento
-        const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
+        }else{
+                // ora sono sicuro che c'è l'elemento
+                    const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
       
-        const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
-        //copio la lista e modifico il singolo elemento 
-        const devicethatIwanttopubblish = new Device(deviceCopy.name,deviceCopy.ip,deviceCopy.topicListInput,deviceCopy.topicListOutput)
-        for(const dev of this.listDevices){
-            if(dev.name == objectMessage.nome){
-                devicethatIwanttopubblish.topicListInput = devicethatIwanttopubblish.topicListInput.map((topic)=>{
-                    if(topic.nome===objectMessage.topic){
-                        topic.stato=objectMessage.option;
-                        return topic;
-                        
-                    }else{
-                        return topic;
-                    }
+                
+                //copio la lista e modifico il singolo elemento 
+                const devicethatIwanttopubblish = new Device(deviceInsideOfList.name,deviceInsideOfList.ip,deviceInsideOfList.topicListInput,deviceInsideOfList.topicListOutput)
+                      for(const dev of devicethatIwanttopubblish.topicListInput){
+                        if(dev.nome===objectMessage.topic){
+                            dev.stato=objectMessage.option;
+                            
+                        }           
+                      }
+                                
+                               
+    
+                    this.client.publish("MODIFICHE_SENSORI",JSON.stringify(devicethatIwanttopubblish));                       
+                    this.addDevice(devicethatIwanttopubblish);
+                    
+                    //pubblica lo stato dei dispositivi aggiornato  
+   
+                }        
         
-                })
-                this.addDevice(devicethatIwanttopubblish);
-            }else{
-                this.client.publish("writeTopic","nessun device con nome corrispondente trovato"); //risponde alla richiesta 
-            }
-           
-        }        
-        
-        this.client.publish("MODIFICHE_SENSORI",JSON.stringify(devicethatIwanttopubblish));
-         //pubblica lo stato dei dispositivi aggiornato                 
+            
+               
     }
 
  
@@ -216,41 +213,36 @@ class Manager
 
 
     updateSensorOutPut(objectMessage){
+        const indexOfDeviceInsideListDevices = this.listDevices.findIndex(obj =>{return obj.name === objectMessage.name});
        
-             //faccio una copia del device e lo mappo per farlo combaciare
-        const indexOfDeviceInsideListDevices =this.listDevices.map(device=>device.name).indexOf(name)
-
         if(indexOfDeviceInsideListDevices<0){
            console.log(' Il device non è presente nella lista!')
+           this.client.publish("outputtriggered","Il device non è presente nella lista!")
            return 
-        }
-        // ora sono sicuro che c'è l'elemento
-        const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
+        }else{
+                // ora sono sicuro che c'è l'elemento
+                    const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
       
-        const deviceCopy = JSON.parse(JSON.stringify(deviceInsideOfList))
-        //copio la lista e modifico il singolo elemento 
-        const devicethatIwanttoUpdate = new Device(deviceCopy.name,deviceCopy.ip,deviceCopy.topicListInput,deviceCopy.topicListOutput)
-        for(const dev of this.listDevices){
-            if(dev.name == objectMessage.nome){
-                devicethatIwanttoUpdate.topicListOutput = devicethatIwanttoUpdate.topicListOutput.map((topic)=>{
-                    if(topic.nome===objectMessage.topic){
-                        topic.stato=objectMessage.option;
-                        return topic;
-                        
-                    }else{
-                        return topic;
-                    }
-        
-                })
-                this.addDevice(devicethatIwanttoUpdate);
-            }else{
-                this.client.publish("outputtriggered","nessun device con nome corrispondente trovato"); //risponde alla richiesta 
-            }
-           
-        } 
                 
-    }
+                //copio la lista e modifico il singolo elemento 
+                const devicethatIwanttoUpdate = new Device(deviceInsideOfList.name,deviceInsideOfList.ip,deviceInsideOfList.topicListInput,deviceInsideOfList.topicListOutput)
+                      for(const dev of devicethatIwanttoUpdate.topicListOutput){
+                        if(dev.nome===objectMessage.topic){
+                            dev.stato=objectMessage.option;
+                            
+                        }           
+                      }           
+    
+                                          
+                    this.addDevice(devicethatIwanttoUpdate);
+                    
+                    //pubblica lo stato dei dispositivi aggiornato  
+   
+                }        
         
+            
+               
+    }
 
     
     
@@ -304,25 +296,28 @@ class Manager
     }
 
     
-    getAllInfoOfDevice(nome){
+    getAllInfoOfDevice(objectMessage){
         for(const dev of this.listDevices){
-            if(dev.name === nome){
-                const listaJsonTopic = JSON.stringify(this.getInfoTopicInputOnDevice(nome),this.getInfoTopicOutputOnDevice(nome));
-                this.client.publish("listTopicsDevice",listaJsonTopic,{retain:true});
+            if(dev.name === objectMessage.name){
+                const v = [];
+                v.push(this.getInfoTopicInputOnDevice(objectMessage.name));
+                v.push(this.getInfoTopicOutputOnDevice(objectMessage.name));
+                const listaJsonTopic = JSON.stringify(v);
+                this.client.publish("listTopicsDevice",listaJsonTopic);
                 
-            }else{
-                this.client.publish("listTopicsDevice","dispositivo non presente");
-            }
+                }
             
         }
     }
 
-    getStatusOfTopicOutputOnDevice(nomeDisp,nomeTopic){
+    getStatusOfTopicOutputOnDevice(objectMessage){
         for(const dev of this.listDevices){
-            if(dev.name === nomeDisp){
+            if(dev.name === objectMessage.name){
                 for (const top of dev.topicListOutput)
-                    if(top.nome == nomeTopic){
-                        this.client.publish("readTopic",top.stato);
+                    if(top.nome == objectMessage.topic){
+                        let stato = top.stato;
+                        let state =JSON.stringify({"name":"Movimento","stato":stato})
+                        this.client.publish("readTopic",state);
                     }
             }else{
                 return "dispositivo non presente"
@@ -379,8 +374,8 @@ class Manager
             }
              outputList.push(dev.topicListOutput);
             }
-        let listaOut = JSON.stringify(outputList);
-        this.client.publish("DeviceOutputList",listaOut);
+        
+       return outputList
         
     }
 
@@ -392,31 +387,9 @@ class Manager
         }
         
     }
-
-    getStateOfDevices(nome){
-        let dispositiviIn = [];
-        let dispositiviOut = [];
-        for(const dev of this.listDevices){
-            if(dev.name == nome){
-            for(const dispI of dev.topicListInput){
-                dispositiviIn.push(dispI.nome,dispI.stato);
-                console.log(dispI.nome,dispI.stato);
-                 
-                for(const dispO of dev.topicListOutput){
-                    dispositiviOut.push(dispO.nome,dispO.stato);
-                    console.log(dispO.nome,dispO.stato)
-                }
-            }
-            const topicDevice = JSON.stringify(dispositiviIn,dispositiviOut);
-            this.client.publish("topicDevice",topicDevice);
-        }else{
-            this.client.publish("topicDevice","nessun dispositivo corrisponde al nome indicato");
-        }
-            
-
-                    
-        }
-    }
+     
+        
+    
   
     
     removeDeadDevice(r){

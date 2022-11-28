@@ -3,7 +3,7 @@
     "ip":"127.0.0.1",
     "topicListInput": [
         {
-            "nome": "Led",
+            "nome": "Led1",
             "options": [
                 "spento",
                 "acceso"
