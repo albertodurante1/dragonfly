@@ -2,23 +2,30 @@ const util = require('util')
 const {Device,Topic }= require('./device.js')
 var mqtt = require('mqtt');
 const {ex_devices} = require('./exampledevice')
-var client = mqtt.connect('mqtt://192.168.1.6:1883',{clientId:"mini"})
+var client = mqtt.connect('mqtt://192.168.195.247:1883',{clientId:"mini"})
+const OK = "OK";
 
-const def = JSON.stringify(ex_devices)
-const def1 = JSON.stringify({"topic": "disp"})
-const def2 = JSON.stringify({"name":"esp","topic":"Movimento"})
-const def3 = JSON.stringify({"name":"esp","topic":"Led1","option":"acceso"})
+
+
+//const def = JSON.stringify(ex_devices)
+const def1 = JSON.stringify({"msg":"ciao"}) //richiede lista dispositivi listDevice
+const def2 = JSON.stringify({"name":"esp","topic":"Movimento"}) //richiede stato movimento readTopic
+const def3 = JSON.stringify({"name":"esp","topic":"Led1","option":"acceso"}) //accende un led writeTopic
 const def4 = JSON.stringify({"name":"esp","topic":"Movimento","option":"rilevato"})
-const def5 = JSON.stringify({"name": "esp"})
-const def6 = JSON.stringify({"ip": "ping"})
+const def5 = JSON.stringify({"name": "esp"}) // acquisisce tutti i topic di un dispositivo listTopicsDevice
+const def6 = JSON.stringify({"ip": "ping"}) //pinga il dispositivo  pingdevice
 
-const checkTimeout = ()=>{
-client.publish("newdevice",def,{retain:true});
-client.subscribe("listDevices")
-}
- const myTimeout = setTimeout(checkTimeout, 5000);
+// const checkTimeout = ()=>{
+// client.publish("newdevice",def,{retain:true});
+// client.subscribe("listDevice")
+// }
+//  const myTimeout = setTimeout(checkTimeout, 5000);
 
-  const checkTimeout1 = ()=>{client.publish("listDevice",def1)}
+
+client.on('connect', function(packet) {  client.subscribe("listDevices"),{qos:1}});
+  const checkTimeout1 = ()=>{client.publish("listDevices",def1)
+      
+      }
   const myTimeout1 = setTimeout(checkTimeout1, 8000);
 
 const checkTimeout2 = ()=>{client.publish("readTopic",def2)}
@@ -38,3 +45,20 @@ const myTimeout2 = setTimeout(checkTimeout2, 10000);
 
 
 
+ client.on('publish',function(packet){
+  
+  var json = JSON.parse(packet.payload);
+    console.log(json);
+ });
+
+ client.on('offline', function() {
+  console.log("offline");
+});
+
+client.on("error", function(error) {
+  console.log("ERROR: ", error);
+});
+
+client.on('message', function (topic, message) {
+  console.log(topic, message.toString());
+});

@@ -9,7 +9,7 @@ const exec = require("child_process").exec;
 class Manager
 {
     
-    static LISTDEVICES = "listDevice";
+    static LISTDEVICES = "listDevices";
     static TOPICNEWDEVICE = "newdevice";
     static TOPICSENSORTRIGGERED = "readTopic";
     static TOPICMODIFICHESENSORI = "writeTopic";
@@ -23,6 +23,7 @@ class Manager
      OnCallback(object){
         this.client.on('message', (topic,message)=>{
             const objectMessage = JSON.parse(message.toString())
+            
             switch(topic){
                 case Manager.TOPICNEWDEVICE:
                     this.addDevice(objectMessage);                   
@@ -37,7 +38,12 @@ class Manager
                     this.pingAllDevice();
                     break;
                 case Manager.LISTDEVICES:
-                    this.getListOfDevice();
+                        if(objectMessage.msg === "ciao"){
+                            this.getListOfDevice();
+                        }
+                        
+                    
+                    
                     break;
                 case Manager.LISTTOPICDEVICE:
                     this.getAllInfoOfDevice(objectMessage);
@@ -94,6 +100,7 @@ class Manager
    */
     addDevice(objectMessage)
     {   
+    try{
         //console.log(objectMessage)
         let listInputTopic= objectMessage.topicListInput
         let listOutputTopic= objectMessage.topicListOutput
@@ -112,13 +119,21 @@ class Manager
         	            //aggiungo un device alla lista
                     }
              }
-        }    
+        } 
+    }catch(err){
+        console.log("errore in aggiunta dispositivo", err);
+        }   
     }
    
     removeDevice(name){
+        try{ 
             const indexRemove =this.listDevices.map(device=>device.name).indexOf(name)
             this.listDevices.splice(indexRemove); 
-        }        
+        }  
+        catch(err){
+            console.log("errore nella rimozione del dispositivo", err);
+        }   
+    }   
     //controlla la presenza del dispositivo e se non esiste lo rimuove
      //si puó anche usare pop o remove del device
     
@@ -165,6 +180,7 @@ class Manager
     
     triggerDevice(objectMessage) 
     {
+        try{ 
         const indexOfDeviceInsideListDevices = this.listDevices.findIndex(obj =>{return obj.name ===objectMessage.name});
        
         if(indexOfDeviceInsideListDevices<0){
@@ -172,30 +188,23 @@ class Manager
            this.client.publish("writeTopic","Il device non è presente nella lista!")
            return 
         }else{
-                // ora sono sicuro che c'è l'elemento
-                    const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
-      
-                
-                //copio la lista e modifico il singolo elemento 
-                const devicethatIwanttopubblish = new Device(deviceInsideOfList.name,deviceInsideOfList.ip,deviceInsideOfList.topicListInput,deviceInsideOfList.topicListOutput)
+            const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
+            const devicethatIwanttopubblish = new Device(deviceInsideOfList.name,deviceInsideOfList.ip,deviceInsideOfList.topicListInput,deviceInsideOfList.topicListOutput)
                       for(const dev of devicethatIwanttopubblish.topicListInput){
                         if(dev.nome===objectMessage.topic){
                             dev.stato=objectMessage.option;
                             
                         }           
                       }
-                                
-                               
-    
                     this.client.publish("MODIFICHE_SENSORI",JSON.stringify(devicethatIwanttopubblish));                       
                     this.addDevice(devicethatIwanttopubblish);
                     
-                    //pubblica lo stato dei dispositivi aggiornato  
    
                 }        
         
-            
-               
+        }catch(err){
+           console.log("errore nell'attivazione del sensore", err);    
+        }
     }
 
  
@@ -213,6 +222,7 @@ class Manager
 
 
     updateSensorOutPut(objectMessage){
+        try{ 
         const indexOfDeviceInsideListDevices = this.listDevices.findIndex(obj =>{return obj.name === objectMessage.name});
        
         if(indexOfDeviceInsideListDevices<0){
@@ -220,11 +230,8 @@ class Manager
            this.client.publish("outputtriggered","Il device non è presente nella lista!")
            return 
         }else{
-                // ora sono sicuro che c'è l'elemento
-                    const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
-      
-                
-                //copio la lista e modifico il singolo elemento 
+                 const deviceInsideOfList = this.listDevices[indexOfDeviceInsideListDevices];      
+                     
                 const devicethatIwanttoUpdate = new Device(deviceInsideOfList.name,deviceInsideOfList.ip,deviceInsideOfList.topicListInput,deviceInsideOfList.topicListOutput)
                       for(const dev of devicethatIwanttoUpdate.topicListOutput){
                         if(dev.nome===objectMessage.topic){
@@ -236,9 +243,12 @@ class Manager
                                           
                     this.addDevice(devicethatIwanttoUpdate);
                     
-                    //pubblica lo stato dei dispositivi aggiornato  
+       
    
-                }        
+                } 
+            }catch(err){
+                    console.log("errore nell'update, sintassi non corretta", err);
+            }       
         
             
                
@@ -265,10 +275,7 @@ class Manager
         });
     }
      
-     /**
-     * 
-     * @param {string} nome
-     */
+
     getInfoTopicInputOnDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
@@ -279,11 +286,6 @@ class Manager
             
         }
     }
-
-     /**
-     * 
-     * @param {string} nome
-     */
     getInfoTopicOutputOnDevice(nome){
         for(const dev of this.listDevices){
             if(dev.name === nome){
@@ -294,9 +296,7 @@ class Manager
             
         }
     }
-
-    
-    getAllInfoOfDevice(objectMessage){
+   getAllInfoOfDevice(objectMessage){
         for(const dev of this.listDevices){
             if(dev.name === objectMessage.name){
                 const v = [];
@@ -311,6 +311,7 @@ class Manager
     }
 
     getStatusOfTopicOutputOnDevice(objectMessage){
+        try{ 
         for(const dev of this.listDevices){
             if(dev.name === objectMessage.name){
                 for (const top of dev.topicListOutput)
@@ -323,6 +324,9 @@ class Manager
                 return "dispositivo non presente"
             }
             
+            }
+        }catch(err){
+            console.log("errore nella restituzione della lista dei topic", err);
         }
     }
     unSubOnEvent(topic){
@@ -338,10 +342,7 @@ class Manager
     }
 
 
-    publishListOfDevices(){
-        const listaJson = JSON.stringify(this.listDevices);
-        this.client.publish("listDevices",listaJson,{retain:true});
-    }
+   
 
     publicNameOfAllDevice(){
 
@@ -375,17 +376,32 @@ class Manager
              outputList.push(dev.topicListOutput);
             }
         
-       return outputList
+            let listaOut = JSON.stringify(outputList);
+            this.client.publish("DeviceInputList",listaOut);
         
     }
 
     getListOfDevice(){
+        
         if(this.listDevices.length === 0 ){
-            this.client.publish("listDevices","non ci sono dispositivi connessi"); 
-        }else{
-            this.publishListOfDevices(); 
+            this.client.publish("listDevices","non ci sono dispositivi connessi");
+            return 
         }
         
+                 this.client.publish("listDevices",JSON.stringify(this.listDevices));
+            
+           
+            
+            
+            
+        
+        
+    }
+
+    publishListOfDevices(a){
+        
+        const listaJson = JSON.stringify(a);
+        this.client.publish("listDevice",listaJson);
     }
      
         
