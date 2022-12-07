@@ -2,7 +2,7 @@ const util = require('util')
 const {Device,Topic }= require('./device.js')
 const  Manager = require('./manager.js');
 
-const man = new Manager("admin","12345678",'mqtt://172.29.15.104:1883');
+const man = new Manager("admin","12345678",'mqtt://192.168.195.247:1883');
    
 //const def = JSON.stringify("test1");
  //const checkTimeout = ()=>{man.client.publish("newdevice",def,{retain:true})}

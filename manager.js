@@ -1,7 +1,6 @@
 var mqtt = require('mqtt');
 var ping = require('ping');
 const {Device,Topic} = require('./device');
-const {Ipaddress} = require('./ipAddress');
 const exec = require("child_process").exec;
 
 
@@ -17,6 +16,7 @@ class Manager
     static LISTTOPICDEVICE ="listTopicsDevice";
     static SUBONTOPIC = "subOnTopic";
     static UNSUBONTOPIC = "unSubOnTopic";
+    static UNREADTOPIC = "unreadTopic";
     static SENSORTRIGGERED = "outputtriggered";
 
     
@@ -56,7 +56,10 @@ class Manager
                     break;
                 case Manager.SENSORTRIGGERED:
                     this.updateSensorOutPut(objectMessage);
-                    break;                                   
+                    break; 
+                case Manager.UNREADTOPIC:
+                    this.unSubOnEvent(objectMessage);
+                    break;                                    
                 default:this.client.publish(topic,"questo topic non é stato ancora gestito");
                 break;
             }
@@ -329,13 +332,13 @@ class Manager
             console.log("errore nella restituzione della lista dei topic", err);
         }
     }
-    unSubOnEvent(topic){
+    unSubOnEvent(objectMessage){
         //controlliamo se topic sia una lista di topic o un solo topic
-        if(Array.isArray(topic)){
-            for(const a of topic){ //unsub sui topic del device
+        if(Array.isArray(objectMessage.topic)){
+            for(const a of objectMessage.topic){ //unsub sui topic del device
             this.client.unsubscribe(a);
         }}else{
-            this.client.unsubscribe(topic);
+            this.client.unsubscribe(objectMessage.topic);
         }
         
         
